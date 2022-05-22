@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'http_service.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -30,12 +32,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  void _startCheck() {
-    setState(() {
-      _counter++;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,11 +42,6 @@ class _MyHomePageState extends State<MyHomePage> {
       body: const Center(
         child: TwitterIdForm()
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _startCheck,
-        tooltip: 'Start',
-        child: const Icon(Icons.send),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
@@ -71,6 +62,14 @@ class _TwitterIdFormState extends State<TwitterIdForm> {
     });
   }
 
+  void _startCheck() {
+    var httpService = HttpService();
+    httpService.getPosts(twitterId);
+    setState(() {
+      // _counter++;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -88,12 +87,16 @@ class _TwitterIdFormState extends State<TwitterIdForm> {
             TextField(
               enabled: true,
               style: const TextStyle(color: Colors.lightBlue),
-              maxLines:1 ,
+              maxLines: 1,
               onChanged: _onChangedId,
-              decoration: const InputDecoration(
-                hintText: '@は不要です'
-              ),
+              decoration: const InputDecoration(hintText: '@は不要です'),
             ),
+            FloatingActionButton(
+              onPressed: _startCheck,
+              tooltip: 'Start',
+              child: const Icon(Icons.send),
+            ),
+            // This trailing comma makes auto-formatting nicer for build methods.
           ],
         )
     );
