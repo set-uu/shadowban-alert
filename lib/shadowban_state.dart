@@ -1,11 +1,15 @@
+import 'status.dart';
+
 class ShadowbanState {
   final String userId;
-  final String stateName;
+  final Status stateName;
   final String id;
-  final bool search;
-  final bool suggestion;
-  final bool ghost;
-  final bool replies;
+
+  // true:バンされていない。
+  final bool search; // 検索バン (Level2)
+  final bool suggestion; // 検索サジェスチョンバン（Level1）
+  final bool ghost; // ゴーストバン (Level3)
+  final bool replies; // リプライバン(Level4)
   final DateTime dateTime;
 
   ShadowbanState({
@@ -19,12 +23,26 @@ class ShadowbanState {
     required this.dateTime,
   });
 
+  factory ShadowbanState.otherError(String userId) {
+    var state = ShadowbanState(
+      userId: userId,
+      stateName: Status.error,
+      id: '',
+      search: false,
+      suggestion: false,
+      ghost: false,
+      replies: false,
+      dateTime: DateTime.now(),
+    );
+    return state;
+  }
+
   factory ShadowbanState.fromJson(String userId, Map<dynamic, dynamic> json) {
     if (json['profile'].containsKey('protected') &&
         json['profile']['protected']) {
       var state = ShadowbanState(
         userId: userId,
-        stateName: '鍵アカウントのため確認できません',
+        stateName: Status.closed,
         id: '',
         search: false,
         suggestion: false,
@@ -39,7 +57,7 @@ class ShadowbanState {
         json['profile']['suspended']) {
       var state = ShadowbanState(
         userId: userId,
-        stateName: '凍結されたアカウントのため確認できません',
+        stateName: Status.frozen,
         id: '',
         search: false,
         suggestion: false,
@@ -53,7 +71,8 @@ class ShadowbanState {
     if (!json['profile']['exists']) {
       var state = ShadowbanState(
         userId: userId,
-        stateName: 'アカウントが存在しません',
+        stateName: Status.notExists,
+        // stateName: 'アカウントが存在しません',
         id: '',
         search: false,
         suggestion: false,
@@ -66,7 +85,7 @@ class ShadowbanState {
 
     var state = ShadowbanState(
       userId: userId,
-      stateName: 'ステータスは以下の通りです',
+      stateName: Status.ok,
       id: json['profile']['id'] as String,
       search: json['tests']['search'],
       suggestion: json['tests']['typeahead'],
