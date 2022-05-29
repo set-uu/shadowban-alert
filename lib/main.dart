@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shadowban_alert/shadowban_state.dart';
+
+import 'http_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -22,18 +25,26 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key, required this.title}) : super(key: key);
-
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  String twitterId = '';
+  Future<ShadowbanState>? state;
+
+  void _onChangedId(String s) {
+    setState(() {
+      twitterId = s;
+    });
+  }
+
   void _startCheck() {
     setState(() {
-      _counter++;
+      var httpService = HttpService();
+      state = httpService.getPosts(twitterId);
     });
   }
 
@@ -43,38 +54,7 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: const Center(
-        child: TwitterIdForm()
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _startCheck,
-        tooltip: 'Start',
-        child: const Icon(Icons.send),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
-  }
-}
-
-class TwitterIdForm extends StatefulWidget {
-  const TwitterIdForm({Key? key}) : super(key: key);
-
-  @override
-  _TwitterIdFormState createState() => _TwitterIdFormState();
-}
-
-class _TwitterIdFormState extends State<TwitterIdForm> {
-  String twitterId = '';
-
-  void _onChangedId(String s) {
-    setState(() {
-      twitterId = s;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        padding: const EdgeInsets.all(50.0),
+      body: Center(
         child: Column(
           children: <Widget>[
             const Text(
@@ -82,20 +62,44 @@ class _TwitterIdFormState extends State<TwitterIdForm> {
               style: TextStyle(
                   color: Colors.blueAccent,
                   fontSize: 20.0,
-                  fontWeight: FontWeight.w500
-              ),
+                  fontWeight: FontWeight.w500),
             ),
             TextField(
               enabled: true,
               style: const TextStyle(color: Colors.lightBlue),
-              maxLines:1 ,
+              maxLines: 1,
               onChanged: _onChangedId,
-              decoration: const InputDecoration(
-                hintText: '@は不要です'
-              ),
+              decoration: const InputDecoration(hintText: '@は不要です'),
             ),
+            FutureBuilder(
+                future: state,
+                builder: (context, snapshot) {
+                  List<Widget> child = [Column()];
+
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+
+                  if (snapshot.hasData) {
+                    child = [(snapshot.data as ShadowbanState).makeWidget];
+                  } else if (snapshot.hasError) {
+                    child = [const Text('エラー')];
+                  }
+
+                  return Column(
+                    children: child,
+                  );
+                }),
           ],
-        )
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _startCheck,
+        tooltip: 'Start',
+        child: const Icon(Icons.send),
+      ),
     );
   }
 }
