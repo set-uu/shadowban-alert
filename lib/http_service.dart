@@ -15,7 +15,7 @@ class HttpService {
       var state = ShadowbanState.fromJson(_id, body);
       return state;
     } else {
-      throw "Unable to retrieve posts.";
+      return ShadowbanState.otherError(_id);
     }
   }
 }
