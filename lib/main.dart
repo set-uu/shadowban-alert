@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shadowban_alert/shadowban_state.dart';
-import 'package:shadowban_alert/status.dart';
 
 import 'http_service.dart';
 
@@ -34,7 +33,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String twitterId = '';
-  ShadowbanState? state;
+  Future<ShadowbanState>? state;
 
   void _onChangedId(String s) {
     setState(() {
@@ -45,8 +44,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void _startCheck() {
     setState(() {
       var httpService = HttpService();
-      httpService.getPosts(twitterId)
-          .then((value) => state = value);
+      state = httpService.getPosts(twitterId);
     });
   }
 
@@ -64,8 +62,7 @@ class _MyHomePageState extends State<MyHomePage> {
               style: TextStyle(
                   color: Colors.blueAccent,
                   fontSize: 20.0,
-                  fontWeight: FontWeight.w500
-              ),
+                  fontWeight: FontWeight.w500),
             ),
             TextField(
               enabled: true,
@@ -74,9 +71,27 @@ class _MyHomePageState extends State<MyHomePage> {
               onChanged: _onChangedId,
               decoration: const InputDecoration(hintText: '@は不要です'),
             ),
-            if (state != null) ...{
-              state!.makeWidget
-            },
+            FutureBuilder(
+                future: state,
+                builder: (context, snapshot) {
+                  List<Widget> child = [Column()];
+
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+
+                  if (snapshot.hasData) {
+                    child = [(snapshot.data as ShadowbanState).makeWidget];
+                  } else if (snapshot.hasError) {
+                    child = [const Text('エラー')];
+                  }
+
+                  return Column(
+                    children: child,
+                  );
+                }),
           ],
         ),
       ),
