@@ -1,8 +1,10 @@
+import 'package:flutter/material.dart';
+
 import 'status.dart';
 
 class ShadowbanState {
   final String userId;
-  final Status stateName;
+  final Status status;
   final String id;
 
   // true:バンされていない。
@@ -14,7 +16,7 @@ class ShadowbanState {
 
   ShadowbanState({
     required this.userId,
-    required this.stateName,
+    required this.status,
     required this.id,
     required this.search,
     required this.suggestion,
@@ -26,7 +28,7 @@ class ShadowbanState {
   factory ShadowbanState.otherError(String userId) {
     var state = ShadowbanState(
       userId: userId,
-      stateName: Status.error,
+      status: Status.error,
       id: '',
       search: false,
       suggestion: false,
@@ -42,7 +44,7 @@ class ShadowbanState {
         json['profile']['protected']) {
       var state = ShadowbanState(
         userId: userId,
-        stateName: Status.closed,
+        status: Status.closed,
         id: '',
         search: false,
         suggestion: false,
@@ -57,7 +59,7 @@ class ShadowbanState {
         json['profile']['suspended']) {
       var state = ShadowbanState(
         userId: userId,
-        stateName: Status.frozen,
+        status: Status.frozen,
         id: '',
         search: false,
         suggestion: false,
@@ -71,7 +73,7 @@ class ShadowbanState {
     if (!json['profile']['exists']) {
       var state = ShadowbanState(
         userId: userId,
-        stateName: Status.notExists,
+        status: Status.notExists,
         // stateName: 'アカウントが存在しません',
         id: '',
         search: false,
@@ -85,7 +87,7 @@ class ShadowbanState {
 
     var state = ShadowbanState(
       userId: userId,
-      stateName: Status.ok,
+      status: Status.ok,
       id: json['profile']['id'] as String,
       search: json['tests']['search'],
       suggestion: json['tests']['typeahead'],
