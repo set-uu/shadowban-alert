@@ -97,4 +97,73 @@ class ShadowbanState {
     );
     return state;
   }
+
+  Widget get  makeWidget {
+    if (status != Status.ok) {
+      return Text(
+        status.wording,
+        style: const TextStyle(
+            color: Colors.redAccent,
+            fontSize: 20.0,
+            fontWeight: FontWeight.w500
+        ),
+      );
+    }
+    return Column(
+      children: <Widget>[
+        Text(
+          status.wording,
+          style: const TextStyle(
+              color: Colors.blueAccent,
+              fontSize: 20.0,
+              fontWeight: FontWeight.w500
+          ),
+        ),
+        Row(
+          children: <Widget>[
+            const Text("検索順位ダウン:"),
+            Text(
+              suggestion ? 'not ban' : 'ban',
+              style: TextStyle(
+                  color: suggestion ? Colors.green : Colors.redAccent,
+              ),
+            )
+          ],
+        ),
+        Row(
+          children: <Widget>[
+            const Text("検索に出ない:"),
+            Text(
+              search ? 'not ban' : 'ban',
+              style: TextStyle(
+                color: search ? Colors.green : Colors.redAccent,
+              ),
+            )
+          ],
+        ),
+        Row(
+          children: <Widget>[
+            const Text("ゴーストバン:"),
+            Text(
+              ghost ? 'not ban' : 'ban',
+              style: TextStyle(
+                color: ghost ? Colors.green : Colors.redAccent,
+              ),
+            )
+          ],
+        ),
+        Row(
+          children: <Widget>[
+            const Text("リプライバン:"),
+            Text(
+              replies ? 'not ban' : 'ban',
+              style: TextStyle(
+                color: replies ? Colors.green : Colors.redAccent,
+              ),
+            )
+          ],
+        ),
+      ],
+    );
+  }
 }
