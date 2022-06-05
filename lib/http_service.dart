@@ -12,7 +12,7 @@ class HttpService {
     if (res.statusCode == 200) {
       var body = jsonDecode(res.body);
 
-      var state = ShadowbanState.fromJson(_id, body);
+      var state = ShadowbanState.fromHttpResponse(_id, body);
       return state;
     } else {
       return ShadowbanState.otherError(_id);
