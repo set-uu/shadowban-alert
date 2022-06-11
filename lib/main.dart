@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shadowban_alert/shadowban_state.dart';
 
 import 'http_service.dart';
+import 'db_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -35,16 +36,25 @@ class _MyHomePageState extends State<MyHomePage> {
   String twitterId = '';
   Future<ShadowbanState>? state;
 
-  void _onChangedId(String s) {
-    setState(() {
-      twitterId = s;
+  _MyHomePageState() {
+    state = DBProvider.getLatestState();
+    state?.then((value) => {
+      setState(() {
+        debugPrint('###' + value.userId);
+        twitterId = value.userId;
+      })
     });
+  }
+
+  void _onChangedId(String s) {
+    twitterId = s;
   }
 
   void _startCheck() {
     setState(() {
       var httpService = HttpService();
       state = httpService.getPosts(twitterId);
+      state?.then((value) => DBProvider.createState(value));
     });
   }
 
@@ -65,6 +75,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   fontWeight: FontWeight.w500),
             ),
             TextField(
+              controller: TextEditingController(text: twitterId),
               enabled: true,
               style: const TextStyle(color: Colors.lightBlue),
               maxLines: 1,

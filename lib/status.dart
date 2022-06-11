@@ -5,6 +5,7 @@ enum Status {
   frozen, // 凍結
   notExists, // 存在しない
   ok,
+  nothing, // 未チェック
 }
 
 extension StatusExt on Status {
@@ -29,6 +30,8 @@ extension StatusExt on Status {
         return 'ステータスは以下の通りです';
       case Status.from:
         return 'ステータスは以下の通りです';
+      case Status.nothing:
+        return '';
     }
   }
 }

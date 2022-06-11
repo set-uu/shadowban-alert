@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'status.dart';
 
 class ShadowbanState {
+  int id;
   final String userId;
   final Status status;
-  final String id;
 
   // true:バンされていない。
   final bool search; // 検索バン (Level2)
@@ -15,9 +15,9 @@ class ShadowbanState {
   final DateTime dateTime;
 
   ShadowbanState({
+    required this.id,
     required this.userId,
     required this.status,
-    required this.id,
     required this.search,
     required this.suggestion,
     required this.ghost,
@@ -25,11 +25,24 @@ class ShadowbanState {
     required this.dateTime,
   });
 
+  factory ShadowbanState.nothing() {
+    return ShadowbanState(
+      id: 0,
+      userId: '',
+      status: Status.nothing,
+      search: false,
+      suggestion: false,
+      ghost: false,
+      replies: false,
+      dateTime: DateTime.now(),
+    );
+  }
+
   factory ShadowbanState.otherError(String userId) {
     var state = ShadowbanState(
+      id: 0,
       userId: userId,
       status: Status.error,
-      id: '',
       search: false,
       suggestion: false,
       ghost: false,
@@ -39,63 +52,73 @@ class ShadowbanState {
     return state;
   }
 
-  factory ShadowbanState.fromJson(String userId, Map<dynamic, dynamic> json) {
+  /// HTTPのレスポンスから状態を生成する
+  factory ShadowbanState.fromHttpResponse(String userId, Map<dynamic, dynamic> json) {
+    Status status = Status.ok;
     if (json['profile'].containsKey('protected') &&
         json['profile']['protected']) {
-      var state = ShadowbanState(
-        userId: userId,
-        status: Status.closed,
-        id: '',
-        search: false,
-        suggestion: false,
-        ghost: false,
-        replies: false,
-        dateTime: DateTime.now(),
-      );
-      return state;
+      status = Status.closed;
     }
 
     if (json['profile'].containsKey('suspended') &&
         json['profile']['suspended']) {
-      var state = ShadowbanState(
-        userId: userId,
-        status: Status.frozen,
-        id: '',
-        search: false,
-        suggestion: false,
-        ghost: false,
-        replies: false,
-        dateTime: DateTime.now(),
-      );
-      return state;
+      status = Status.frozen;
     }
 
     if (!json['profile']['exists']) {
-      var state = ShadowbanState(
+      status = Status.notExists;
+    }
+
+    if (status != Status.ok) {
+      return ShadowbanState(
+        id: 0,
         userId: userId,
-        status: Status.notExists,
-        // stateName: 'アカウントが存在しません',
-        id: '',
+        status: status,
         search: false,
         suggestion: false,
         ghost: false,
         replies: false,
         dateTime: DateTime.now(),
       );
-      return state;
     }
 
-    var state = ShadowbanState(
+    return ShadowbanState(
+      id: 0,
       userId: userId,
       status: Status.ok,
-      id: json['profile']['id'] as String,
       search: json['tests']['search'],
       suggestion: json['tests']['typeahead'],
       ghost: !json['tests']['ghost']['ban'],
       replies: !json['tests']['more_replies']['ban'],
       dateTime: DateTime.now(),
     );
-    return state;
+  }
+
+  ///DBから取得した結果から状態を作成する
+  factory ShadowbanState.fromDb(Map<String, dynamic> stat) {
+    return ShadowbanState(
+        id: stat['id'],
+        userId: stat['userId'],
+        status: Status.values.byName(stat['status'] as String),
+        search: stat['search'] == 1,
+        suggestion: stat['suggestion'] == 1,
+        ghost: stat['ghost'] == 1,
+        replies: stat['replies'] == 1,
+        dateTime: DateTime.parse(stat['dateTime']).toLocal(),
+    );
+  }
+
+  /// DBに登録するためのMapへ変換する
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'userId' : userId,
+      'status' : status.name,
+      'search' : search ? 1 : 0,
+      'suggestion' : suggestion ? 1 : 0,
+      'ghost' : ghost ? 1 : 0,
+      'replies' : replies ? 1 : 0,
+      'dateTime' : dateTime.toIso8601String(),
+    };
   }
 
   Widget get  makeWidget {
