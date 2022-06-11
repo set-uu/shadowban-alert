@@ -25,6 +25,19 @@ class ShadowbanState {
     required this.dateTime,
   });
 
+  factory ShadowbanState.nothing() {
+    return ShadowbanState(
+      id: 0,
+      userId: '',
+      status: Status.nothing,
+      search: false,
+      suggestion: false,
+      ghost: false,
+      replies: false,
+      dateTime: DateTime.now(),
+    );
+  }
+
   factory ShadowbanState.otherError(String userId) {
     var state = ShadowbanState(
       id: 0,
@@ -93,6 +106,19 @@ class ShadowbanState {
         replies: stat['replies'] == 1,
         dateTime: DateTime.parse(stat['dateTime']).toLocal(),
     );
+  }
+
+  /// DBに登録するためのMapへ変換する
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'userId' : userId,
+      'status' : status.name,
+      'search' : search ? 1 : 0,
+      'suggestion' : suggestion ? 1 : 0,
+      'ghost' : ghost ? 1 : 0,
+      'replies' : replies ? 1 : 0,
+      'dateTime' : dateTime.toIso8601String(),
+    };
   }
 
   Widget get  makeWidget {
