@@ -40,7 +40,6 @@ class _MyHomePageState extends State<MyHomePage> {
     state = DBProvider.getLatestState();
     state?.then((value) => {
       setState(() {
-        debugPrint('###' + value.userId);
         twitterId = value.userId;
       })
     });
