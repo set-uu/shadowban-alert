@@ -1,10 +1,24 @@
+import 'dart:isolate';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:shadowban_alert/my_android_alarm_manager.dart';
 import 'package:shadowban_alert/shadowban_state.dart';
 
-import 'http_service.dart';
 import 'db_provider.dart';
+import 'http_service.dart';
+
+/// A port used to communicate from a background isolate to the UI isolate.
+final ReceivePort port = ReceivePort();
 
 void main() {
+  // Register the UI isolate's SendPort to allow for communication from the
+  // background isolate.
+  IsolateNameServer.registerPortWithName(
+    port.sendPort,
+    isolateName,
+  );
+
   runApp(const MyApp());
 }
 
@@ -36,12 +50,28 @@ class _MyHomePageState extends State<MyHomePage> {
   String twitterId = '';
   Future<ShadowbanState>? state;
 
-  _MyHomePageState() {
+  @override
+  void initState() {
+    super.initState();
+    MyAndroidAlarmManager.init();
+    // Register for events from the background isolate. These messages will
+    // always coincide with an alarm firing.
+    port.listen((_) async => await _onChecked());
+
     state = DBProvider.getLatestState();
     state?.then((value) => {
-      setState(() {
-        twitterId = value.userId;
-      })
+          setState(() {
+            twitterId = value.userId;
+          })
+        });
+  }
+
+  /// 画面表示中にバックグラウンドでチェックが完了したとき
+  Future<void> _onChecked() async {
+    debugPrint('_onChecked');
+    setState(() {
+      state = DBProvider.getLatestState();
+      state?.then((value) => twitterId = value.userId);
     });
   }
 
@@ -54,6 +84,7 @@ class _MyHomePageState extends State<MyHomePage> {
       var httpService = HttpService();
       state = httpService.getPosts(twitterId);
       state?.then((value) => DBProvider.createState(value));
+      MyAndroidAlarmManager.setAlarm();
     });
   }
 
