@@ -43,6 +43,7 @@ dependencies:
   flutter_native_timezone: ^2.0.0
   flutter_app_badger: ^1.4.0
   shared_preferences:
+  intl: ^0.17.0
 
 dev_dependencies:
   flutter_test:
