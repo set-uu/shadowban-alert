@@ -1,10 +1,26 @@
+import 'dart:isolate';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:shadowban_alert/my_android_alarm_manager.dart';
+import 'package:shadowban_alert/my_settings.dart';
 import 'package:shadowban_alert/shadowban_state.dart';
 
-import 'http_service.dart';
 import 'db_provider.dart';
+import 'http_service.dart';
+
+/// A port used to communicate from a background isolate to the UI isolate.
+final ReceivePort port = ReceivePort();
 
 void main() {
+  // Register the UI isolate's SendPort to allow for communication from the
+  // background isolate.
+  IsolateNameServer.registerPortWithName(
+    port.sendPort,
+    isolateName,
+  );
+
   runApp(const MyApp());
 }
 
@@ -35,14 +51,31 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String twitterId = '';
   Future<ShadowbanState>? state;
+  Future<bool> _isCheck = MySettings.isCheck;
+  Future<int> _duration = MySettings.duration;
 
-  _MyHomePageState() {
+  @override
+  void initState() {
+    super.initState();
+    MyAndroidAlarmManager.init();
+    // Register for events from the background isolate. These messages will
+    // always coincide with an alarm firing.
+    port.listen((_) async => await _onChecked());
+
     state = DBProvider.getLatestState();
     state?.then((value) => {
-      setState(() {
-        debugPrint('###' + value.userId);
-        twitterId = value.userId;
-      })
+          setState(() {
+            twitterId = value.userId;
+          })
+        });
+  }
+
+  /// 画面表示中にバックグラウンドでチェックが完了したとき
+  Future<void> _onChecked() async {
+    debugPrint('_onChecked');
+    setState(() {
+      state = DBProvider.getLatestState();
+      state?.then((value) => twitterId = value.userId);
     });
   }
 
@@ -55,6 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
       var httpService = HttpService();
       state = httpService.getPosts(twitterId);
       state?.then((value) => DBProvider.createState(value));
+      MyAndroidAlarmManager.setAlarm();
     });
   }
 
@@ -103,6 +137,78 @@ class _MyHomePageState extends State<MyHomePage> {
                     children: child,
                   );
                 }),
+            FutureBuilder(
+              future: _isCheck,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  return Row(
+                    children: <Widget>[
+                      const Expanded(
+                        flex: 8,
+                        child: Text("定期チェックを行う"),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Switch(
+                          value: snapshot.data as bool,
+                          onChanged: (value) {
+                            MySettings.setIsCheck(value).then((_) {
+                              if(value) {
+                                MyAndroidAlarmManager.setAlarm();
+                              } else {
+                                MyAndroidAlarmManager.cancelAlarm();
+                              }
+                            });
+                            setState(() {
+                              _isCheck = MySettings.isCheck;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                } else {
+                  return const Text('設定取得中');
+                }
+              },
+            ),
+            FutureBuilder(
+              future: _duration,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  return Row(
+                    children: <Widget>[
+                      const Expanded(
+                        flex: 8,
+                        child: Text("チェック間隔(時間)"),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: TextField(
+                          controller: TextEditingController(
+                              text: snapshot.data.toString()),
+                          enabled: true,
+                          maxLines: 1,
+                          textAlign: TextAlign.right,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
+                          onChanged: (value) {
+                            MySettings.setDurationStr(value).then((_) {
+                              MyAndroidAlarmManager.cancelAlarm();
+                              MyAndroidAlarmManager.setAlarm();
+                            });
+                            _duration = MySettings.duration;
+                            },
+                        ),
+                      ),
+                    ],
+                  );
+                } else {
+                  return const Text('');
+                }
+              },
+            ),
           ],
         ),
       ),

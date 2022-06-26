@@ -189,4 +189,24 @@ class ShadowbanState {
       ],
     );
   }
+
+  /// チェック結果が同じか否か
+  bool isSameState(ShadowbanState newState) {
+    if (status != newState.status) {
+      return false;
+    }
+    if (suggestion != newState.suggestion) {
+      return false;
+    }
+    if (search != newState.search) {
+      return false;
+    }
+    if (ghost != newState.ghost) {
+      return false;
+    }
+    if (replies != newState.replies) {
+      return false;
+    }
+    return true;
+  }
 }
