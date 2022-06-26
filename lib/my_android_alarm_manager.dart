@@ -7,6 +7,7 @@ import 'package:shadowban_alert/http_service.dart';
 import 'package:shadowban_alert/shadowban_state.dart';
 
 import 'db_provider.dart';
+import 'my_settings.dart';
 import 'notification.dart';
 
 /// The name associated with the UI isolate's [SendPort].
@@ -44,16 +45,26 @@ class MyAndroidAlarmManager {
     MyAndroidAlarmManager.setAlarm();
   }
 
-  static void setAlarm() {
+  /// アラームを開始する
+  static Future<void> setAlarm() async {
     debugPrint('### Set Alarm');
+    bool isCheck = await MySettings.isCheck;
+    if (!isCheck) return;
+
+    int duration = await MySettings.duration;
     AndroidAlarmManager.oneShot(
-      const Duration(hours: 12),
-      // const Duration(seconds: 10),
+      Duration(hours: duration),
       // Ensure we have a unique alarm ID.
       alarmId,
       callback,
       exact: true,
       wakeup: true,
     );
+  }
+
+  /// アラームを止める
+  static Future<void> cancelAlarm() async {
+    debugPrint('### Cancel Alarm');
+    AndroidAlarmManager.cancel(alarmId);
   }
 }

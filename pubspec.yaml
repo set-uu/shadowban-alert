@@ -42,6 +42,7 @@ dependencies:
   flutter_local_notifications: ^9.6.1
   flutter_native_timezone: ^2.0.0
   flutter_app_badger: ^1.4.0
+  shared_preferences:
 
 dev_dependencies:
   flutter_test:

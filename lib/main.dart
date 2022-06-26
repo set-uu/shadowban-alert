@@ -2,7 +2,9 @@ import 'dart:isolate';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shadowban_alert/my_android_alarm_manager.dart';
+import 'package:shadowban_alert/my_settings.dart';
 import 'package:shadowban_alert/shadowban_state.dart';
 
 import 'db_provider.dart';
@@ -49,6 +51,8 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String twitterId = '';
   Future<ShadowbanState>? state;
+  Future<bool> _isCheck = MySettings.isCheck;
+  Future<int> _duration = MySettings.duration;
 
   @override
   void initState() {
@@ -133,6 +137,78 @@ class _MyHomePageState extends State<MyHomePage> {
                     children: child,
                   );
                 }),
+            FutureBuilder(
+              future: _isCheck,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  return Row(
+                    children: <Widget>[
+                      const Expanded(
+                        flex: 8,
+                        child: Text("定期チェックを行う"),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Switch(
+                          value: snapshot.data as bool,
+                          onChanged: (value) {
+                            MySettings.setIsCheck(value).then((_) {
+                              if(value) {
+                                MyAndroidAlarmManager.setAlarm();
+                              } else {
+                                MyAndroidAlarmManager.cancelAlarm();
+                              }
+                            });
+                            setState(() {
+                              _isCheck = MySettings.isCheck;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                } else {
+                  return const Text('設定取得中');
+                }
+              },
+            ),
+            FutureBuilder(
+              future: _duration,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  return Row(
+                    children: <Widget>[
+                      const Expanded(
+                        flex: 8,
+                        child: Text("チェック間隔(時間)"),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: TextField(
+                          controller: TextEditingController(
+                              text: snapshot.data.toString()),
+                          enabled: true,
+                          maxLines: 1,
+                          textAlign: TextAlign.right,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
+                          onChanged: (value) {
+                            MySettings.setDurationStr(value).then((_) {
+                              MyAndroidAlarmManager.cancelAlarm();
+                              MyAndroidAlarmManager.setAlarm();
+                            });
+                            _duration = MySettings.duration;
+                            },
+                        ),
+                      ),
+                    ],
+                  );
+                } else {
+                  return const Text('');
+                }
+              },
+            ),
           ],
         ),
       ),
