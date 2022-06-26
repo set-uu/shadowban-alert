@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import 'status.dart';
 
@@ -53,7 +54,8 @@ class ShadowbanState {
   }
 
   /// HTTPのレスポンスから状態を生成する
-  factory ShadowbanState.fromHttpResponse(String userId, Map<dynamic, dynamic> json) {
+  factory ShadowbanState.fromHttpResponse(
+      String userId, Map<dynamic, dynamic> json) {
     Status status = Status.ok;
     if (json['profile'].containsKey('protected') &&
         json['profile']['protected']) {
@@ -97,39 +99,38 @@ class ShadowbanState {
   ///DBから取得した結果から状態を作成する
   factory ShadowbanState.fromDb(Map<String, dynamic> stat) {
     return ShadowbanState(
-        id: stat['id'],
-        userId: stat['userId'],
-        status: Status.values.byName(stat['status'] as String),
-        search: stat['search'] == 1,
-        suggestion: stat['suggestion'] == 1,
-        ghost: stat['ghost'] == 1,
-        replies: stat['replies'] == 1,
-        dateTime: DateTime.parse(stat['dateTime']).toLocal(),
+      id: stat['id'],
+      userId: stat['userId'],
+      status: Status.values.byName(stat['status'] as String),
+      search: stat['search'] == 1,
+      suggestion: stat['suggestion'] == 1,
+      ghost: stat['ghost'] == 1,
+      replies: stat['replies'] == 1,
+      dateTime: DateTime.parse(stat['dateTime']),
     );
   }
 
   /// DBに登録するためのMapへ変換する
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'userId' : userId,
-      'status' : status.name,
-      'search' : search ? 1 : 0,
-      'suggestion' : suggestion ? 1 : 0,
-      'ghost' : ghost ? 1 : 0,
-      'replies' : replies ? 1 : 0,
-      'dateTime' : dateTime.toIso8601String(),
+      'userId': userId,
+      'status': status.name,
+      'search': search ? 1 : 0,
+      'suggestion': suggestion ? 1 : 0,
+      'ghost': ghost ? 1 : 0,
+      'replies': replies ? 1 : 0,
+      'dateTime': dateTime.toIso8601String(),
     };
   }
 
-  Widget get  makeWidget {
+  Widget get makeWidget {
     if (status != Status.ok) {
       return Text(
         status.wording,
         style: const TextStyle(
             color: Colors.redAccent,
             fontSize: 20.0,
-            fontWeight: FontWeight.w500
-        ),
+            fontWeight: FontWeight.w500),
       );
     }
     return Column(
@@ -139,51 +140,103 @@ class ShadowbanState {
           style: const TextStyle(
               color: Colors.blueAccent,
               fontSize: 20.0,
-              fontWeight: FontWeight.w500
-          ),
+              fontWeight: FontWeight.w500),
         ),
         Row(
           children: <Widget>[
-            const Text("検索順位ダウン:"),
-            Text(
-              suggestion ? 'not ban' : 'ban',
-              style: TextStyle(
+            const Expanded(
+              flex: 1,
+              child: Text(
+                "サジェスチョンバン：",
+                textAlign: TextAlign.right,
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: Text(
+                suggestion ? '問題なし' : 'バン',
+                style: TextStyle(
                   color: suggestion ? Colors.green : Colors.redAccent,
+                ),
               ),
-            )
+            ),
           ],
         ),
         Row(
           children: <Widget>[
-            const Text("検索に出ない:"),
-            Text(
-              search ? 'not ban' : 'ban',
-              style: TextStyle(
-                color: search ? Colors.green : Colors.redAccent,
+            const Expanded(
+              flex: 1,
+              child: Text(
+                "サーチバン：",
+                textAlign: TextAlign.right,
               ),
-            )
+            ),
+            Expanded(
+              flex: 1,
+              child: Text(
+                search ? '問題なし' : 'バン',
+                style: TextStyle(
+                  color: search ? Colors.green : Colors.redAccent,
+                ),
+              ),
+            ),
           ],
         ),
         Row(
           children: <Widget>[
-            const Text("ゴーストバン:"),
-            Text(
-              ghost ? 'not ban' : 'ban',
-              style: TextStyle(
-                color: ghost ? Colors.green : Colors.redAccent,
+            const Expanded(
+              flex: 1,
+              child: Text(
+                "ゴーストバン：",
+                textAlign: TextAlign.right,
               ),
-            )
+            ),
+            Expanded(
+              flex: 1,
+              child: Text(
+                ghost ? '問題なし' : 'バン',
+                style: TextStyle(
+                  color: ghost ? Colors.green : Colors.redAccent,
+                ),
+              ),
+            ),
           ],
         ),
         Row(
           children: <Widget>[
-            const Text("リプライバン:"),
-            Text(
-              replies ? 'not ban' : 'ban',
-              style: TextStyle(
-                color: replies ? Colors.green : Colors.redAccent,
+            const Expanded(
+              flex: 1,
+              child: Text(
+                "リプライバン：",
+                textAlign: TextAlign.right,
               ),
-            )
+            ),
+            Expanded(
+              flex: 1,
+              child: Text(
+                replies ? '問題なし' : 'バン',
+                style: TextStyle(
+                  color: replies ? Colors.green : Colors.redAccent,
+                ),
+              ),
+            ),
+          ],
+        ),
+        Row(
+          children: <Widget>[
+            const Expanded(
+              flex: 1,
+              child: Text(
+                "確認日時：",
+                textAlign: TextAlign.right,
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: Text(
+                DateFormat('yyyy/MM/dd HH:mm').format(dateTime.toLocal()),
+              ),
+            ),
           ],
         ),
       ],

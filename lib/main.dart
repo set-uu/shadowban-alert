@@ -111,7 +111,6 @@ class _MyHomePageState extends State<MyHomePage> {
             TextField(
               controller: TextEditingController(text: twitterId),
               enabled: true,
-              style: const TextStyle(color: Colors.lightBlue),
               maxLines: 1,
               onChanged: _onChangedId,
               decoration: const InputDecoration(hintText: '@は不要です'),
@@ -180,7 +179,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     children: <Widget>[
                       const Expanded(
                         flex: 8,
-                        child: Text("チェック間隔(時間)"),
+                        child: Text("チェック間隔(時間おき)"),
                       ),
                       Expanded(
                         flex: 2,
