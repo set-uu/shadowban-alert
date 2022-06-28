@@ -3,6 +3,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:shadowban_alert/ad_interstitial.dart';
 import 'package:shadowban_alert/my_android_alarm_manager.dart';
 import 'package:shadowban_alert/my_settings.dart';
 import 'package:shadowban_alert/shadowban_state.dart';
@@ -20,6 +22,9 @@ void main() {
     port.sendPort,
     isolateName,
   );
+
+  WidgetsFlutterBinding.ensureInitialized();
+  MobileAds.instance.initialize();
 
   runApp(const MyApp());
 }
@@ -53,6 +58,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<ShadowbanState>? state;
   Future<bool> _isCheck = MySettings.isCheck;
   Future<int> _duration = MySettings.duration;
+  InterstitialAd? _interstitialAd;
+  MyAdInterstitial myAd = MyAdInterstitial();
 
   @override
   void initState() {
@@ -68,6 +75,13 @@ class _MyHomePageState extends State<MyHomePage> {
             twitterId = value.userId;
           })
         });
+    myAd.createAd();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _interstitialAd?.dispose();
   }
 
   /// 画面表示中にバックグラウンドでチェックが完了したとき
@@ -90,6 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
       state?.then((value) => DBProvider.createState(value));
       MyAndroidAlarmManager.setAlarm();
     });
+    myAd.showAd();
   }
 
   @override
@@ -152,7 +167,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           value: snapshot.data as bool,
                           onChanged: (value) {
                             MySettings.setIsCheck(value).then((_) {
-                              if(value) {
+                              if (value) {
                                 MyAndroidAlarmManager.setAlarm();
                               } else {
                                 MyAndroidAlarmManager.cancelAlarm();
@@ -198,7 +213,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               MyAndroidAlarmManager.setAlarm();
                             });
                             _duration = MySettings.duration;
-                            },
+                          },
                         ),
                       ),
                     ],
