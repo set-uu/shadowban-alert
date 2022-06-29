@@ -29,14 +29,11 @@ class MyAndroidAlarmManager {
     ShadowbanState newState = await HttpService().getPosts(state.userId);
     await DBProvider.createState(newState);
 
-    String notifyStr = '';
-    if (state.isSameState(newState)) {
-      notifyStr = '状態に変化はありません。';
+    if (state.isSameState(newState) && !await MySettings.isChangedOnly) {
+      MyNotification.notify('状態に変化はありません。');
     } else {
-      notifyStr = '状態に変化がありました。';
+      MyNotification.notify('状態に変化がありました。');
     }
-    debugPrint(notifyStr);
-    MyNotification.notify(notifyStr);
 
     // This will be null if we're running in the background.
     uiSendPort = IsolateNameServer.lookupPortByName(isolateName);
