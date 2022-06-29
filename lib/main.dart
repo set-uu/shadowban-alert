@@ -3,10 +3,13 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:shadowban_alert/ad_interstitial.dart';
 import 'package:shadowban_alert/my_android_alarm_manager.dart';
 import 'package:shadowban_alert/my_settings.dart';
 import 'package:shadowban_alert/shadowban_state.dart';
 
+import 'ad_banner.dart';
 import 'db_provider.dart';
 import 'http_service.dart';
 
@@ -20,6 +23,9 @@ void main() {
     port.sendPort,
     isolateName,
   );
+
+  WidgetsFlutterBinding.ensureInitialized();
+  MobileAds.instance.initialize();
 
   runApp(const MyApp());
 }
@@ -53,6 +59,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<ShadowbanState>? state;
   Future<bool> _isCheck = MySettings.isCheck;
   Future<int> _duration = MySettings.duration;
+  MyAdInterstitial myAd = MyAdInterstitial();
+  late BannerAd banner;
 
   @override
   void initState() {
@@ -68,6 +76,15 @@ class _MyHomePageState extends State<MyHomePage> {
             twitterId = value.userId;
           })
         });
+    banner = MyAdBanner.createBanner();
+    myAd.createAd();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    myAd.dispose();
+    banner.dispose();
   }
 
   /// 画面表示中にバックグラウンドでチェックが完了したとき
@@ -90,6 +107,7 @@ class _MyHomePageState extends State<MyHomePage> {
       state?.then((value) => DBProvider.createState(value));
       MyAndroidAlarmManager.setAlarm();
     });
+    myAd.showAd();
   }
 
   @override
@@ -98,118 +116,132 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Column(
-          children: <Widget>[
-            const Text(
-              "Twitter ID を入力してください",
-              style: TextStyle(
-                  color: Colors.blueAccent,
-                  fontSize: 20.0,
-                  fontWeight: FontWeight.w500),
-            ),
-            TextField(
-              controller: TextEditingController(text: twitterId),
-              enabled: true,
-              maxLines: 1,
-              onChanged: _onChangedId,
-              decoration: const InputDecoration(hintText: '@は不要です'),
-            ),
-            FutureBuilder(
-                future: state,
-                builder: (context, snapshot) {
-                  List<Widget> child = [Column()];
+      body: Stack(
+        children: <Widget>[
+          Center(
+            child: Column(
+              children: <Widget>[
+                const Text(
+                  "Twitter ID を入力してください",
+                  style: TextStyle(
+                      color: Colors.blueAccent,
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.w500),
+                ),
+                TextField(
+                  controller: TextEditingController(text: twitterId),
+                  enabled: true,
+                  maxLines: 1,
+                  onChanged: _onChangedId,
+                  decoration: const InputDecoration(hintText: '@は不要です'),
+                ),
+                FutureBuilder(
+                    future: state,
+                    builder: (context, snapshot) {
+                      List<Widget> child = [Column()];
 
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
 
-                  if (snapshot.hasData) {
-                    child = [(snapshot.data as ShadowbanState).makeWidget];
-                  } else if (snapshot.hasError) {
-                    child = [const Text('エラー')];
-                  }
+                      if (snapshot.hasData) {
+                        child = [(snapshot.data as ShadowbanState).makeWidget];
+                      } else if (snapshot.hasError) {
+                        child = [const Text('エラー')];
+                      }
 
-                  return Column(
-                    children: child,
-                  );
-                }),
-            FutureBuilder(
-              future: _isCheck,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  return Row(
-                    children: <Widget>[
-                      const Expanded(
-                        flex: 8,
-                        child: Text("定期チェックを行う"),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Switch(
-                          value: snapshot.data as bool,
-                          onChanged: (value) {
-                            MySettings.setIsCheck(value).then((_) {
-                              if(value) {
-                                MyAndroidAlarmManager.setAlarm();
-                              } else {
-                                MyAndroidAlarmManager.cancelAlarm();
-                              }
-                            });
-                            setState(() {
-                              _isCheck = MySettings.isCheck;
-                            });
-                          },
-                        ),
-                      ),
-                    ],
-                  );
-                } else {
-                  return const Text('設定取得中');
-                }
-              },
+                      return Column(
+                        children: child,
+                      );
+                    }),
+                FutureBuilder(
+                  future: _isCheck,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return Row(
+                        children: <Widget>[
+                          const Expanded(
+                            flex: 8,
+                            child: Text("定期チェックを行う"),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Switch(
+                              value: snapshot.data as bool,
+                              onChanged: (value) {
+                                MySettings.setIsCheck(value).then((_) {
+                                  if (value) {
+                                    MyAndroidAlarmManager.setAlarm();
+                                  } else {
+                                    MyAndroidAlarmManager.cancelAlarm();
+                                  }
+                                });
+                                setState(() {
+                                  _isCheck = MySettings.isCheck;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      );
+                    } else {
+                      return const Text('設定取得中');
+                    }
+                  },
+                ),
+                FutureBuilder(
+                  future: _duration,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return Row(
+                        children: <Widget>[
+                          const Expanded(
+                            flex: 8,
+                            child: Text("チェック間隔(時間おき)"),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: TextField(
+                              controller: TextEditingController(
+                                  text: snapshot.data.toString()),
+                              enabled: true,
+                              maxLines: 1,
+                              textAlign: TextAlign.right,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly
+                              ],
+                              onChanged: (value) {
+                                MySettings.setDurationStr(value).then((_) {
+                                  _duration = MySettings.duration;
+                                  MyAndroidAlarmManager.cancelAlarm();
+                                  MyAndroidAlarmManager.setAlarm();
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      );
+                    } else {
+                      return const Text('');
+                    }
+                  },
+                ),
+              ],
             ),
-            FutureBuilder(
-              future: _duration,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  return Row(
-                    children: <Widget>[
-                      const Expanded(
-                        flex: 8,
-                        child: Text("チェック間隔(時間おき)"),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: TextField(
-                          controller: TextEditingController(
-                              text: snapshot.data.toString()),
-                          enabled: true,
-                          maxLines: 1,
-                          textAlign: TextAlign.right,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly
-                          ],
-                          onChanged: (value) {
-                            MySettings.setDurationStr(value).then((_) {
-                              MyAndroidAlarmManager.cancelAlarm();
-                              MyAndroidAlarmManager.setAlarm();
-                            });
-                            _duration = MySettings.duration;
-                            },
-                        ),
-                      ),
-                    ],
-                  );
-                } else {
-                  return const Text('');
-                }
-              },
+          ),
+          Positioned(
+            bottom: 0,
+            width: MediaQuery.of(context).size.width,
+            height: banner.size.height.toDouble(),
+            child: Center(
+              child: AdWidget(
+                ad: banner,
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _startCheck,
