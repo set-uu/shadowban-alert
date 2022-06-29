@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class MyAdInterstitial {
@@ -21,7 +21,7 @@ class MyAdInterstitial {
         },
         // 広告のロードが失敗した際に呼ばれます。
         onAdFailedToLoad: (LoadAdError error) {
-          debugPrint('### ad load failed $error');
+          debugPrint('### interstitial ad load failed $error');
           _loadFailCount++;
           _interstitialAd = null;
           if (_loadFailCount <= 2) {
@@ -47,7 +47,7 @@ class MyAdInterstitial {
         ad.dispose();
       },
       onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
-        print('### $ad OnAdFailed $error');
+        print('### interstitial $ad OnAdFailed $error');
         ad.dispose();
         createAd();
       },
@@ -58,10 +58,13 @@ class MyAdInterstitial {
     _interstitialAd = null;
   }
 
+  void dispose() {
+    _interstitialAd?.dispose();
+  }
+
   // 広告IDをプラットフォームに合わせて取得
   static String get interstitialAdUnitId {
-    var isRelease = const bool.fromEnvironment('dart.vm.product');
-    if (!isRelease) {
+    if (kDebugMode) {
       // debug実行時
       return 'ca-app-pub-3940256099942544/1033173712'; // test id
     }
