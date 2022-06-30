@@ -173,14 +173,14 @@ class _MyHomePageState extends State<MyHomePage> {
                               value: snapshot.data as bool,
                               onChanged: (value) {
                                 MySettings.setIsCheck(value).then((_) {
+                                  setState(() {
+                                    _isCheck = MySettings.isCheck;
+                                  });
                                   if (value) {
                                     MyAndroidAlarmManager.setAlarm();
                                   } else {
                                     MyAndroidAlarmManager.cancelAlarm();
                                   }
-                                });
-                                setState(() {
-                                  _isCheck = MySettings.isCheck;
                                 });
                               },
                             ),
@@ -244,9 +244,10 @@ class _MyHomePageState extends State<MyHomePage> {
                             child: Switch(
                               value: snapshot.data as bool,
                               onChanged: (value) {
-                                MySettings.setIsChangedOnly(value);
-                                setState(() {
-                                  _isChangedOnly = MySettings.isChangedOnly;
+                                MySettings.setIsChangedOnly(value).then((_) {
+                                  setState(() {
+                                    _isChangedOnly = MySettings.isChangedOnly;
+                                  });
                                 });
                               },
                             ),
