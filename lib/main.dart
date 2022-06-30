@@ -59,9 +59,12 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<ShadowbanState>? state;
   Future<bool> _isCheck = MySettings.isCheck;
   Future<bool> _isChangedOnly = MySettings.isChangedOnly;
-  Future<int> _duration = MySettings.duration;
   MyAdInterstitial myAd = MyAdInterstitial();
   late BannerAd banner;
+  late TextEditingController _twitterIdController;
+  late TextEditingController _durationController;
+  String _duration = '';
+
 
   @override
   void initState() {
@@ -75,10 +78,15 @@ class _MyHomePageState extends State<MyHomePage> {
     state?.then((value) => {
           setState(() {
             twitterId = value.userId;
+            _twitterIdController = TextEditingController(text: twitterId);
           })
         });
     banner = MyAdBanner.createBanner();
     myAd.createAd();
+    MySettings.duration.then((value) {
+      _duration = value.toString();
+      _durationController = TextEditingController(text: _duration);
+    });
   }
 
   @override
@@ -130,7 +138,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       fontWeight: FontWeight.w500),
                 ),
                 TextField(
-                  controller: TextEditingController(text: twitterId),
+                  controller: _twitterIdController,
                   enabled: true,
                   maxLines: 1,
                   onChanged: _onChangedId,
@@ -192,42 +200,32 @@ class _MyHomePageState extends State<MyHomePage> {
                     }
                   },
                 ),
-                FutureBuilder(
-                  future: _duration,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return Row(
-                        children: <Widget>[
-                          const Expanded(
-                            flex: 8,
-                            child: Text("チェック間隔(時間おき)"),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: TextField(
-                              controller: TextEditingController(
-                                  text: snapshot.data.toString()),
-                              enabled: true,
-                              maxLines: 1,
-                              textAlign: TextAlign.right,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly
-                              ],
-                              onChanged: (value) {
-                                MySettings.setDurationStr(value).then((_) {
-                                  _duration = MySettings.duration;
-                                  MyAndroidAlarmManager.cancelAlarm();
-                                  MyAndroidAlarmManager.setAlarm();
-                                });
-                              },
-                            ),
-                          ),
+                Row(
+                  children: <Widget>[
+                    const Expanded(
+                      flex: 8,
+                      child: Text("チェック間隔(時間おき)"),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: TextField(
+                        controller: _durationController,
+                        enabled: true,
+                        maxLines: 1,
+                        textAlign: TextAlign.right,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
                         ],
-                      );
-                    } else {
-                      return const Text('');
-                    }
-                  },
+                        onChanged: (value) {
+                          MySettings.setDurationStr(value).then((_) {
+                            MySettings.duration.then((d) => _duration = d.toString());
+                            MyAndroidAlarmManager.cancelAlarm();
+                            MyAndroidAlarmManager.setAlarm();
+                          });
+                        },
+                      ),
+                    ),
+                  ],
                 ),
                 FutureBuilder(
                   future: _isChangedOnly,
