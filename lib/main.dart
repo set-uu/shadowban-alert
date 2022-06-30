@@ -58,6 +58,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String twitterId = '';
   Future<ShadowbanState>? state;
   Future<bool> _isCheck = MySettings.isCheck;
+  Future<bool> _isChangedOnly = MySettings.isChangedOnly;
   Future<int> _duration = MySettings.duration;
   MyAdInterstitial myAd = MyAdInterstitial();
   late BannerAd banner;
@@ -172,14 +173,14 @@ class _MyHomePageState extends State<MyHomePage> {
                               value: snapshot.data as bool,
                               onChanged: (value) {
                                 MySettings.setIsCheck(value).then((_) {
+                                  setState(() {
+                                    _isCheck = MySettings.isCheck;
+                                  });
                                   if (value) {
                                     MyAndroidAlarmManager.setAlarm();
                                   } else {
                                     MyAndroidAlarmManager.cancelAlarm();
                                   }
-                                });
-                                setState(() {
-                                  _isCheck = MySettings.isCheck;
                                 });
                               },
                             ),
@@ -217,6 +218,36 @@ class _MyHomePageState extends State<MyHomePage> {
                                   _duration = MySettings.duration;
                                   MyAndroidAlarmManager.cancelAlarm();
                                   MyAndroidAlarmManager.setAlarm();
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      );
+                    } else {
+                      return const Text('');
+                    }
+                  },
+                ),
+                FutureBuilder(
+                  future: _isChangedOnly,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return Row(
+                        children: <Widget>[
+                          const Expanded(
+                            flex: 8,
+                            child: Text("変更があった時だけ通知する"),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Switch(
+                              value: snapshot.data as bool,
+                              onChanged: (value) {
+                                MySettings.setIsChangedOnly(value).then((_) {
+                                  setState(() {
+                                    _isChangedOnly = MySettings.isChangedOnly;
+                                  });
                                 });
                               },
                             ),
