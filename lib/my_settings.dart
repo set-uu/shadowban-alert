@@ -46,6 +46,6 @@ class MySettings {
 
   static Future<void> setDurationStr(String duration) async {
     int? parsed = int.tryParse(duration);
-    if (parsed != null) setDuration(parsed);
+    if (parsed != null) await setDuration(parsed);
   }
 }
