@@ -29,8 +29,10 @@ class MyAndroidAlarmManager {
     ShadowbanState newState = await HttpService().getPosts(state.userId);
     await DBProvider.createState(newState);
 
-    if (state.isSameState(newState) && !await MySettings.isChangedOnly) {
-      MyNotification.notify('状態に変化はありません。');
+    if (state.isSameState(newState)) {
+      if(!await MySettings.isChangedOnly) {
+        MyNotification.notify('状態に変化はありません。');
+      }
     } else {
       MyNotification.notify('状態に変化がありました。');
     }

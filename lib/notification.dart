@@ -28,6 +28,7 @@ class MyNotification {
               importance: Importance.max,
               priority: Priority.high,
               ongoing: true,
+              playSound: false,
             ),
           ),
         ));
