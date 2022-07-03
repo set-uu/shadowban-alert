@@ -3,10 +3,10 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:shadowban_alert/status.dart';
 
 import 'db_provider.dart';
 import 'http_service.dart';
-import 'my_permission.dart';
 import 'my_settings.dart';
 import 'notification.dart';
 import 'shadowban_state.dart';
@@ -80,6 +80,10 @@ class ForegroundTaskHandler extends TaskHandler {
     debugPrint('ForegroundTaskHandler.onEvent');
 
     ShadowbanState state = await DBProvider.getLatestState();
+    if (state.status == Status.nothing) {
+      return;
+    }
+
     ShadowbanState newState = await HttpService().getPosts(state.userId);
     await DBProvider.createState(newState);
 
