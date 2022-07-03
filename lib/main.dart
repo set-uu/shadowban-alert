@@ -112,7 +112,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _startCheck() async {
-    await isGrantedForeGroundService(true);
     setState(() {
       var httpService = HttpService();
       state = httpService.getPosts(twitterId);
@@ -123,9 +122,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _onChangedIsCheck(bool value) async {
-    if (value) {
-      await isGrantedForeGroundService(true);
-    }
     MySettings.setIsCheck(value).then((_) {
       setState(() {
         _isCheck = MySettings.isCheck;

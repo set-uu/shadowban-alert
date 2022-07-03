@@ -29,7 +29,7 @@ class MyAndroidAlarmManager {
 
     int duration = await MySettings.duration;
     AndroidAlarmManager.oneShot(
-      Duration(seconds: duration),
+      Duration(hours: duration),
       // Ensure we have a unique alarm ID.
       alarmId,
       callback,

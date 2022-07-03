@@ -41,11 +41,6 @@ Future<void> initForeGroundTask() async {
 }
 
 Future<void> startForeGroundTask() async {
-  if (!await isGrantedForeGroundService(false)) {
-    print('### permission not granted');
-    return;
-  }
-
   if (await FlutterForegroundTask.isRunningService) {
     await FlutterForegroundTask.restartService();
   } else {
