@@ -1,20 +1,10 @@
-import 'dart:isolate';
-import 'dart:ui';
-
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:shadowban_alert/http_service.dart';
-import 'package:shadowban_alert/shadowban_state.dart';
 
-import 'db_provider.dart';
+import 'my_foreground_task.dart';
 import 'my_settings.dart';
-import 'notification.dart';
 
-/// The name associated with the UI isolate's [SendPort].
-const String isolateName = 'com.uu.set.isolate';
 const int alarmId = 0;
-// The background To foreground
-SendPort? uiSendPort;
 
 class MyAndroidAlarmManager {
   static void init() {
@@ -25,21 +15,8 @@ class MyAndroidAlarmManager {
   static Future<void> callback() async {
     debugPrint('### Alarm fired!');
 
-    ShadowbanState state = await DBProvider.getLatestState();
-    ShadowbanState newState = await HttpService().getPosts(state.userId);
-    await DBProvider.createState(newState);
-
-    if (state.isSameState(newState)) {
-      if(!await MySettings.isChangedOnly) {
-        MyNotification.notify('状態に変化はありません。');
-      }
-    } else {
-      MyNotification.notify('状態に変化がありました。');
-    }
-
-    // This will be null if we're running in the background.
-    uiSendPort = IsolateNameServer.lookupPortByName(isolateName);
-    uiSendPort?.send(null);
+    await initForeGroundTask();
+    startForeGroundTask();
 
     MyAndroidAlarmManager.setAlarm();
   }
@@ -52,7 +29,7 @@ class MyAndroidAlarmManager {
 
     int duration = await MySettings.duration;
     AndroidAlarmManager.oneShot(
-      Duration(hours: duration),
+      Duration(seconds: duration),
       // Ensure we have a unique alarm ID.
       alarmId,
       callback,

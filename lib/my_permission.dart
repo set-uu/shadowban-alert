@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 Future<bool> isGrantedForeGroundService(bool withConfirm) async {
@@ -6,9 +7,11 @@ Future<bool> isGrantedForeGroundService(bool withConfirm) async {
     return true;
   }
 
+  debugPrint('### $status');
   if (status == PermissionStatus.denied) {
     // 一度もリクエストしてないので権限のリクエスト.
     if(withConfirm) {
+      debugPrint('### confirm with denied');
       status = await Permission.systemAlertWindow.request();
     }
   }
@@ -17,6 +20,7 @@ Future<bool> isGrantedForeGroundService(bool withConfirm) async {
       status.isPermanentlyDenied) {
     // 端末の設定画面へ遷移.
     if(withConfirm){
+      debugPrint('### open app settings');
       await openAppSettings();
     }
   }

@@ -48,6 +48,9 @@
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
+        <service android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
+            android:exported="false"/>
+
         <receiver
             android:name="dev.fluttercommunity.plus.androidalarmmanager.AlarmBroadcastReceiver"
             android:exported="false" />

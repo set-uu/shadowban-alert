@@ -13,6 +13,7 @@ import 'package:shadowban_alert/shadowban_state.dart';
 import 'ad_banner.dart';
 import 'db_provider.dart';
 import 'http_service.dart';
+import 'my_foreground_task.dart';
 
 /// A port used to communicate from a background isolate to the UI isolate.
 final ReceivePort port = ReceivePort();
@@ -87,6 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _duration = value.toString();
       _durationController = TextEditingController(text: _duration);
     });
+    initForeGroundTask();
   }
 
   @override
