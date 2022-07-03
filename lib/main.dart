@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shadowban_alert/ad_interstitial.dart';
 import 'package:shadowban_alert/my_android_alarm_manager.dart';
+import 'package:shadowban_alert/my_permission.dart';
 import 'package:shadowban_alert/my_settings.dart';
 import 'package:shadowban_alert/shadowban_state.dart';
 
@@ -65,7 +66,6 @@ class _MyHomePageState extends State<MyHomePage> {
   late TextEditingController _durationController;
   String _duration = '';
 
-
   @override
   void initState() {
     super.initState();
@@ -109,7 +109,8 @@ class _MyHomePageState extends State<MyHomePage> {
     twitterId = s;
   }
 
-  void _startCheck() {
+  Future<void> _startCheck() async {
+    await isGrantedForeGroundService(true);
     setState(() {
       var httpService = HttpService();
       state = httpService.getPosts(twitterId);
@@ -117,6 +118,22 @@ class _MyHomePageState extends State<MyHomePage> {
       MyAndroidAlarmManager.setAlarm();
     });
     myAd.showAd();
+  }
+
+  Future<void> _onChangedIsCheck(bool value) async {
+    if (value) {
+      await isGrantedForeGroundService(true);
+    }
+    MySettings.setIsCheck(value).then((_) {
+      setState(() {
+        _isCheck = MySettings.isCheck;
+      });
+      if (value) {
+        MyAndroidAlarmManager.setAlarm();
+      } else {
+        MyAndroidAlarmManager.cancelAlarm();
+      }
+    });
   }
 
   @override
@@ -179,18 +196,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             flex: 2,
                             child: Switch(
                               value: snapshot.data as bool,
-                              onChanged: (value) {
-                                MySettings.setIsCheck(value).then((_) {
-                                  setState(() {
-                                    _isCheck = MySettings.isCheck;
-                                  });
-                                  if (value) {
-                                    MyAndroidAlarmManager.setAlarm();
-                                  } else {
-                                    MyAndroidAlarmManager.cancelAlarm();
-                                  }
-                                });
-                              },
+                              onChanged: _onChangedIsCheck,
                             ),
                           ),
                         ],
@@ -218,7 +224,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         ],
                         onChanged: (value) {
                           MySettings.setDurationStr(value).then((_) {
-                            MySettings.duration.then((d) => _duration = d.toString());
+                            MySettings.duration
+                                .then((d) => _duration = d.toString());
                             MyAndroidAlarmManager.cancelAlarm();
                             MyAndroidAlarmManager.setAlarm();
                           });
