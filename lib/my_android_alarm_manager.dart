@@ -23,6 +23,8 @@ class MyAndroidAlarmManager {
 
   /// アラームを開始する
   static Future<void> setAlarm() async {
+    // アラームが重複しないように以前のアラームを一度停止してから再設定する
+    cancelAlarm();
     debugPrint('### Set Alarm');
     bool isCheck = await MySettings.isCheck;
     if (!isCheck) return;

@@ -242,7 +242,6 @@ class _MyHomePageState extends State<MyHomePage> {
                           MySettings.setDurationStr(value).then((_) {
                             MySettings.duration
                                 .then((d) => _duration = d.toString());
-                            MyAndroidAlarmManager.cancelAlarm();
                             MyAndroidAlarmManager.setAlarm();
                           });
                         },
