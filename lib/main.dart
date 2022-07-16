@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shadowban_alert/ad_interstitial.dart';
 import 'package:shadowban_alert/my_android_alarm_manager.dart';
-import 'package:shadowban_alert/my_permission.dart';
 import 'package:shadowban_alert/my_settings.dart';
 import 'package:shadowban_alert/shadowban_state.dart';
 
@@ -84,10 +83,14 @@ class _MyHomePageState extends State<MyHomePage> {
         });
     banner = MyAdBanner.createBanner();
     myAd.createAd();
+
     MySettings.duration.then((value) {
       _duration = value.toString();
       _durationController = TextEditingController(text: _duration);
     });
+    _twitterIdController = TextEditingController(text: twitterId);
+    _durationController = TextEditingController(text: _duration);
+
     initForeGroundTask();
   }
 
@@ -152,12 +155,27 @@ class _MyHomePageState extends State<MyHomePage> {
                       fontSize: 20.0,
                       fontWeight: FontWeight.w500),
                 ),
-                TextField(
-                  controller: _twitterIdController,
-                  enabled: true,
-                  maxLines: 1,
-                  onChanged: _onChangedId,
-                  decoration: const InputDecoration(hintText: '@は不要です'),
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      flex: 8,
+                      child: TextField(
+                        controller: _twitterIdController,
+                        enabled: true,
+                        maxLines: 1,
+                        onChanged: _onChangedId,
+                        decoration: const InputDecoration(hintText: '@は不要です'),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: IconButton(
+                        icon: const Icon(Icons.send),
+                        onPressed: _startCheck,
+                        color: Colors.blueAccent,
+                      ),
+                    ),
+                  ],
                 ),
                 FutureBuilder(
                     future: state,
@@ -276,11 +294,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _startCheck,
-        tooltip: 'Start',
-        child: const Icon(Icons.send),
       ),
     );
   }
