@@ -85,8 +85,10 @@ class _MyHomePageState extends State<MyHomePage> {
     myAd.createAd();
 
     MySettings.duration.then((value) {
-      _duration = value.toString();
-      _durationController = TextEditingController(text: _duration);
+      setState(() {
+        _duration = value.toString();
+        _durationController = TextEditingController(text: _duration);
+      });
     });
     _twitterIdController = TextEditingController(text: twitterId);
     _durationController = TextEditingController(text: _duration);
