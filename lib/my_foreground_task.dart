@@ -21,8 +21,8 @@ Future<void> initForeGroundTask() async {
       channelName: 'Foreground Notification',
       channelDescription:
           'This notification appears when the foreground service is running.',
-      channelImportance: NotificationChannelImportance.LOW,
-      priority: NotificationPriority.LOW,
+      channelImportance: NotificationChannelImportance.MAX,
+      priority: NotificationPriority.MAX,
       iconData: const NotificationIconData(
         resType: ResourceType.mipmap,
         resPrefix: ResourcePrefix.ic,
@@ -35,6 +35,7 @@ Future<void> initForeGroundTask() async {
     ),
     foregroundTaskOptions: const ForegroundTaskOptions(
       interval: 5000,
+      autoRunOnBoot: true,
     ),
     printDevLog: true,
   );
@@ -95,9 +96,6 @@ class ForegroundTaskHandler extends TaskHandler {
       MyNotification.notify('状態に変化がありました。');
     }
 
-    // This will be null if we're running in the background.
-    SendPort? uiSendPort = IsolateNameServer.lookupPortByName(isolateName);
-    uiSendPort?.send(null);
     // Send data to the main isolate.
     sendPort?.send(timestamp);
     stopForegroundTask();

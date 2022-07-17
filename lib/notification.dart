@@ -26,9 +26,11 @@ class MyNotification {
               'checked_notify',
               'changed notify',
               importance: Importance.max,
-              priority: Priority.high,
+              priority: Priority.max,
               ongoing: true,
               playSound: false,
+              enableLights: true,
+              visibility: NotificationVisibility.public
             ),
           ),
         ));
