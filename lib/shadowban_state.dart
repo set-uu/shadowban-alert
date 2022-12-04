@@ -88,10 +88,10 @@ class ShadowbanState {
       id: 0,
       userId: userId,
       status: Status.ok,
-      search: json['tests']['search'],
-      suggestion: json['tests']['typeahead'],
-      ghost: !json['tests']['ghost']['ban'],
-      replies: !json['tests']['more_replies']['ban'],
+      search: json['tests']['search'] ?? true,
+      suggestion: json['tests']['typeahead'] ?? true,
+      ghost: json['tests']['ghost']['ban'] == null ? true : false,
+      replies: json['tests']['more_replies']['ban'] == null ? true : false,
       dateTime: DateTime.now(),
     );
   }
